@@ -9,15 +9,15 @@ export class UserController {
     this.userRepository = AppDataSource.getRepository(User);
   }
   async all(request: Request, response: Response) {
-    const users = await this.userRepository.findAndCount({
-      where: {},
-    });
-    return response.status(200).json({ users });
+    const builder = this.userRepository.createQueryBuilder('users');
+    const page: number = parseInt(request.query.page as any) || 1;
+    const perPage = parseInt(request.query.items as any) || 8;
+    builder.offset((page - 1) * perPage).limit(perPage);
+    return response.status(200).json({ users: await builder.getMany() });
   }
 
   async one(request: Request, response: Response) {
     const id = parseInt(request.params.id);
-
     const user = await this.userRepository.findOne({ where: { id: id } });
 
     if (!user) {
